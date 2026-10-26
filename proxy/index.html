@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RelayWay Proxy Control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg-primary: #0f0f0f;
+      --bg-secondary: #1a1a1a;
+      --bg-tertiary: #222222;
+      --border: #2d2d2d;
+      --border-light: #3a3a3a;
+      --text-primary: #f5f5f5;
+      --text-secondary: #b0b0b0;
+      --text-muted: #707070;
+      --accent: #7c3aed;
+      --accent-hover: #6d28d9;
+      --accent-glow: rgba(124, 58, 237, 0.4);
+      --success: #10b981;
+      --success-bg: rgba(16, 185, 129, 0.12);
+      --success-border: rgba(16, 185, 129, 0.3);
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.12);
+      --warning-border: rgba(245, 158, 11, 0.3);
+      --error: #ef4444;
+      --error-bg: rgba(239, 68, 68, 0.12);
+      --error-border: rgba(239, 68, 68, 0.3);
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    .container { 
+      max-width: 1600px; 
+      margin: 0 auto; 
+      padding: 0 24px; 
+    }
+    
+    @media (max-width: 768px) {
+      .container { padding: 0 16px; }
+    }
+    
+    /* Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(15, 15, 15, 0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    
+    @media (max-width: 768px) {
+      .header-content {
+        padding: 12px 0;
+        gap: 12px;
+      }
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), #a855f7);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      box-shadow: 0 0 24px var(--accent-glow);
+    }
+    .logo-text {
+      min-width: 0;
+      overflow: hidden;
+    }
+    .logo-text h1 {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .logo-text p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    @media (max-width: 640px) {
+      .logo-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+      }
+      .logo-text h1 {
+        font-size: 16px;
+      }
+      .logo-text p {
+        display: none;
+      }
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    
+    @media (max-width: 768px) {
+      .header-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+    
+    /* Status Badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid;
+      white-space: nowrap;
+    }
+    .status-badge.success {
+      background: var(--success-bg);
+      border-color: var(--success-border);
+      color: var(--success);
+    }
+    .status-badge.error {
+      background: var(--error-bg);
+      border-color: var(--error-border);
+      color: var(--error);
+    }
+    .status-badge.neutral {
+      background: var(--bg-tertiary);
+      border-color: var(--border-light);
+      color: var(--text-secondary);
+    }
+    
+    @media (max-width: 640px) {
+      .status-badge {
+        font-size: 11px;
+        padding: 5px 10px;
+      }
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    /* Buttons */
+    button {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+      box-shadow: 0 0 24px var(--accent-glow);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-light);
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--bg-secondary);
+      border-color: var(--border);
+    }
+    
+    @media (max-width: 640px) {
+      button {
+        padding: 7px 12px;
+        font-size: 13px;
+      }
+    }
+    
+    /* Main Grid */
+    main { padding: 24px 0; }
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+    .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+    .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+    
+    @media (max-width: 1200px) {
+      .grid-cols-4 { grid-template-columns: repeat(2, 1fr); }
+      .grid-cols-3 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      main { padding: 16px 0; }
+      .grid { gap: 12px; }
+      .grid-cols-4, .grid-cols-3, .grid-cols-2 { grid-template-columns: 1fr; }
+    }
+    
+    /* Cards */
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      transition: all 0.2s;
+    }
+    .card:hover {
+      border-color: var(--border-light);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    @media (max-width: 768px) {
+      .card {
+        padding: 16px;
+        border-radius: 12px;
+      }
+      .card-title {
+        font-size: 12px;
+      }
+    }
+    
+    /* Metric Card */
+    .metric {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      transition: all 0.2s;
+    }
+    .metric:hover {
+      border-color: var(--border-light);
+      transform: translateY(-2px);
+    }
+    .metric-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .metric-value {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      line-height: 1;
+      word-break: break-word;
+    }
+    .metric-value.success { color: var(--success); }
+    .metric-value.warning { color: var(--warning); }
+    .metric-value.error { color: var(--error); }
+    .metric-value.accent { color: var(--accent); }
+    .metric-secondary {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    
+    @media (max-width: 768px) {
+      .metric {
+        padding: 14px;
+      }
+      .metric-value {
+        font-size: 24px;
+      }
+      .metric-label {
+        font-size: 10px;
+      }
+    }
+    
+    /* Info Row */
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+    .info-row:last-child {
+      border-bottom: none;
+    }
+    .info-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+    .info-value {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+      text-align: right;
+      word-break: break-word;
+    }
+    .info-value.success { color: var(--success); }
+    .info-value.warning { color: var(--warning); }
+    .info-value.error { color: var(--error); }
+    
+    @media (max-width: 640px) {
+      .info-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        padding: 12px 0;
+      }
+      .info-value {
+        text-align: left;
+      }
+      .info-label, .info-value {
+        font-size: 12px;
+      }
+    }
+    
+    /* Section */
+    .section {
+      margin-bottom: 24px;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .section-title {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    
+    @media (max-width: 768px) {
+      .section {
+        margin-bottom: 20px;
+      }
+      .section-title {
+        font-size: 18px;
+      }
+    }
+    
+    /* Table */
+    .table-container {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+    }
+    thead {
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+    }
+    td {
+      padding: 14px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    tbody tr {
+      transition: background 0.2s;
+    }
+    tbody tr:hover {
+      background: var(--bg-tertiary);
+    }
+    tbody tr.active {
+      background: rgba(124, 58, 237, 0.12);
+      border-left: 3px solid var(--accent);
+    }
+    
+    @media (max-width: 768px) {
+      .table-container {
+        border-radius: 12px;
+      }
+      th, td {
+        padding: 10px 12px;
+        font-size: 12px;
+      }
+      th {
+        font-size: 10px;
+      }
+    }
+    
+    /* Logs */
+    .logs-container {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .log-line {
+      display: block;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .log-line.error { color: var(--error); font-weight: 500; }
+    .log-line.warning { color: var(--warning); }
+    .log-line.success { color: var(--success); }
+    
+    @media (max-width: 768px) {
+      .logs-container {
+        border-radius: 12px;
+        padding: 12px;
+        font-size: 11px;
+        max-height: 300px;
+      }
+    }
+    
+    /* Checkbox */
+    .checkbox-group {
+      display: flex;
+      gap: 16px;
+    }
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+    }
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--accent);
+    }
+    
+    /* Pill */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+      border: 1px solid;
+    }
+    .pill.success {
+      background: var(--success-bg);
+      border-color: var(--success-border);
+      color: var(--success);
+    }
+    .pill.warning {
+      background: var(--warning-bg);
+      border-color: var(--warning-border);
+      color: var(--warning);
+    }
+    .pill.error {
+      background: var(--error-bg);
+      border-color: var(--error-border);
+      color: var(--error);
+    }
+    .pill.neutral {
+      background: var(--bg-tertiary);
+      border-color: var(--border-light);
+      color: var(--text-secondary);
+    }
+    
+    @media (max-width: 640px) {
+      .pill {
+        font-size: 11px;
+        padding: 3px 8px;
+      }
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-light);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <div class="logo-icon">RW</div>
+          <div class="logo-text">
+            <h1>RelayWay Proxy Control</h1>
+            <p>RelayWay provider management</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <span id="readyBadge" class="status-badge neutral">
+            <span class="status-dot"></span>
+            Checking...
+          </span>
+          <span id="refreshBadge" class="status-badge neutral">Refresh in 3s</span>
+          <button class="btn-primary" onclick="refreshAll(true)">Refresh Now</button>
+          <button class="btn-secondary" onclick="toggleAuto()" id="autoBtn">Auto: On</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <!-- Key Metrics -->
+      <section class="section">
+        <div class="grid grid-cols-4" id="keyMetrics"></div>
+      </section>
+
+      <!-- Main Grid -->
+      <div class="grid grid-cols-3">
+        <!-- Control Plane -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Control Plane</h2>
+          </div>
+          <div class="card-body" id="controlPlane"></div>
+        </div>
+
+        <!-- Traffic Plane -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Traffic Plane</h2>
+          </div>
+          <div class="card-body">
+            <div class="grid grid-cols-2" id="trafficMetrics"></div>
+          </div>
+        </div>
+
+        <!-- Egress Info -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Current Egress</h2>
+            <button class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="lookupEgress()" id="egressBtn">Query</button>
+          </div>
+          <div class="card-body">
+            <div class="grid grid-cols-2" id="egressInfo"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nodes Table -->
+      <section class="section" style="margin-top: 32px;">
+        <div class="section-header">
+          <h2 class="section-title">Provider Nodes</h2>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <span id="nodeCount" class="pill neutral">0 Nodes</span>
+            <button class="btn-secondary" onclick="probeAll()">Probe All</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Node Name</th>
+                <th>Node ID</th>
+                <th>Status</th>
+                <th>Probe RTT</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="nodesTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Logs -->
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">System Logs</h2>
+          <div class="checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="proxyLogToggle" onchange="updateDebug()">
+              Proxy
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="healthLogToggle" onchange="updateDebug()">
+              Health
+            </label>
+          </div>
+        </div>
+        <div class="logs-container" id="logs">Loading...</div>
+      </section>
+    </div>
+  </main>
+
+<script>
+const REFRESH_SECONDS = 3;
+let auto = true;
+let nextRefreshAt = Date.now() + REFRESH_SECONDS * 1000;
+let activeNodeId = '';
+const probeState = new Map();
+
+async function getJSON(url, options) {
+  const res = await fetch(url, options);
+  if (!res.ok) throw new Error((await res.text()).trim() || res.statusText);
+  return res.json();
+}
+
+function escapeHTML(s) {
+  return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+function ago(s) {
+  if (!s || String(s).startsWith('0001-')) return 'Never';
+  const sec = Math.max(0, Math.floor((Date.now() - new Date(s).getTime()) / 1000));
+  if (sec < 60) return `${sec}s ago`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  return `${Math.floor(min / 60)}h ago`;
+}
+
+function metric(label, value, tone = '', secondary = '') {
+  const toneClass = tone ? ` ${tone}` : '';
+  const sec = secondary ? `<div class="metric-secondary">${escapeHTML(secondary)}</div>` : '';
+  return `<div class="metric">
+    <div class="metric-label">${escapeHTML(label)}</div>
+    <div class="metric-value${toneClass}">${escapeHTML(value ?? '—')}</div>
+    ${sec}
+  </div>`;
+}
+
+function infoRow(label, value, tone = '') {
+  const toneClass = tone ? ` ${tone}` : '';
+  return `<div class="info-row">
+    <span class="info-label">${escapeHTML(label)}</span>
+    <span class="info-value${toneClass}">${escapeHTML(value ?? '—')}</span>
+  </div>`;
+}
+
+function pill(text, tone = '') {
+  return `<span class="pill ${tone || 'neutral'}">${escapeHTML(text)}</span>`;
+}
+
+async function loadStatus() {
+  const [adapter, relayway] = await Promise.allSettled([getJSON('/status'), getJSON('/relayway/status')]);
+  
+  if (adapter.status !== 'fulfilled') {
+    document.getElementById('controlPlane').innerHTML = infoRow('Error', adapter.reason, 'error');
+    return;
+  }
+
+  const s = adapter.value;
+  const h = s.relay_health || {};
+  const ns = relayway.status === 'fulfilled' ? relayway.value : (s.relayway_status || {});
+  activeNodeId = ns.active_node_id || '';
+
+  // Ready badge
+  const readyBadge = document.getElementById('readyBadge');
+  if (s.relay_ready) {
+    readyBadge.className = 'status-badge success';
+    readyBadge.innerHTML = '<span class="status-dot"></span>Relay Ready';
+  } else {
+    readyBadge.className = 'status-badge error';
+    readyBadge.innerHTML = '<span class="status-dot"></span>Relay Down';
+  }
+
+  // Key metrics
+  document.getElementById('keyMetrics').innerHTML = [
+    metric('Active Node', ns.active_node_name || '—', ns.connected ? 'accent' : 'warning', `ID: ${ns.active_node_id || '—'}`),
+    metric('Mode', ns.active_mode || s.relayway_mode || '—'),
+    metric('Uplink', ns.up_human || '—', '', 'RelayWay'),
+    metric('Downlink', ns.down_human || '—', '', 'RelayWay')
+  ].join('');
+
+  // Control plane
+  document.getElementById('controlPlane').innerHTML = [
+    infoRow('Relay Health', h.ok ? `${h.service} ${h.version}` : 'Unavailable', h.ok ? 'success' : 'error'),
+    infoRow('SOCKS Listener', s.relay_socks_ok ? 'Running' : 'Stopped', s.relay_socks_ok ? 'success' : 'error'),
+    infoRow('Token', s.has_token ? 'Ready' : 'Missing', s.has_token ? 'success' : 'error'),
+    infoRow('Bootstrap', s.bootstrap ? `${s.bootstrap.service_name || 'RelayWay'}` : 'Missing', s.bootstrap ? 'success' : 'warning'),
+    infoRow('Watchdog', `${s.watchdog_checks} checks, ${s.watchdog_failures} failures`, s.watchdog_failures ? 'warning' : 'success'),
+    infoRow('Last Check', ago(s.last_watchdog_at)),
+    infoRow('Last Error', s.last_error || 'None', s.last_error ? 'error' : 'success')
+  ].join('');
+
+  // Traffic metrics
+  document.getElementById('trafficMetrics').innerHTML = [
+    metric('Active', s.active_connections),
+    metric('Peak', s.peak_connections),
+    metric('Accepted', s.connections),
+    metric('Rejected', s.rejected_connections, s.rejected_connections ? 'warning' : ''),
+    metric('Failed Switch', s.failed_switches, s.failed_switches ? 'error' : ''),
+    metric('Failed Dial', s.failed_dials, s.failed_dials ? 'error' : '')
+  ].join('');
+}
+
+async function loadNodes() {
+  const data = await getJSON('/nodes');
+  const nodes = data.nodes || [];
+  document.getElementById('nodeCount').textContent = `${nodes.length} Nodes`;
+  
+  document.getElementById('nodesTable').innerHTML = nodes.map(n => {
+    const p = probeState.get(n.id);
+    const active = n.id === activeNodeId;
+    const probe = p ? (p.ok ? `${p.rtt_ms ?? '—'} ms / ${p.warm_ms ?? '—'} ms warm` : p.error) : 'Not probed';
+    const probeClass = p && !p.ok ? 'error' : p ? 'success' : '';
+    
+    return `<tr class="${active ? 'active' : ''}">
+      <td style="font-weight: 500;">${escapeHTML(n.name || n.id)}</td>
+      <td style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-secondary);">${escapeHTML(n.id)}</td>
+      <td>${pill(active ? 'Selected' : 'Idle', active ? 'success' : 'neutral')}</td>
+      <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px;" class="info-value ${probeClass}">${escapeHTML(probe)}</td>
+      <td style="text-align: right;">
+        <button class="btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="probeNode('${n.id}')">Probe</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function loadLogs() {
+  const data = await getJSON('/logs');
+  const el = document.getElementById('logs');
+  el.innerHTML = (data.lines || []).map(line => {
+    const cls = /\b(ERROR|error|failed|invalid|Unauthorized)\b/.test(line) ? 'error'
+      : /\b(WARN|warning|closed|timeout)\b/.test(line) ? 'warning'
+      : /\b(success|ok|ready|started)\b/i.test(line) ? 'success' : '';
+    return `<span class="log-line ${cls}">${escapeHTML(line)}</span>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+async function loadDebug() {
+  const d = await getJSON('/debug');
+  document.getElementById('proxyLogToggle').checked = !!d.proxy_logs;
+  document.getElementById('healthLogToggle').checked = !!d.health_checks;
+}
+
+async function updateDebug() {
+  await getJSON('/debug', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      proxy_logs: document.getElementById('proxyLogToggle').checked,
+      health_checks: document.getElementById('healthLogToggle').checked
+    })
+  });
+  await Promise.allSettled([loadStatus(), loadLogs()]);
+}
+
+async function lookupEgress() {
+  const btn = document.getElementById('egressBtn');
+  btn.disabled = true;
+  btn.textContent = 'Querying...';
+  document.getElementById('egressInfo').innerHTML = metric('Status', 'Querying...');
+  
+  try {
+    const data = await getJSON('/egress');
+    const ip = data.ipinfo || {};
+    const before = data.active_before || {};
+    const after = data.active_after || {};
+    const changed = before.active_node_id && after.active_node_id && before.active_node_id !== after.active_node_id;
+    
+    document.getElementById('egressInfo').innerHTML = [
+      metric('IP Address', ip.ip || '—'),
+      metric('Location', [ip.city, ip.region, ip.country].filter(Boolean).join(', ') || '—'),
+      metric('Before Query', before.active_node_name || '—', changed ? 'error' : 'success'),
+      metric('After Query', after.active_node_name || '—', changed ? 'error' : 'success'),
+      metric('Organization', ip.org || '—', '', ip.timezone || '—')
+    ].join('');
+  } catch (err) {
+    document.getElementById('egressInfo').innerHTML = metric('Error', err.message || err, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Query';
+    await refreshAll(true);
+  }
+}
+
+async function probeNode(id) {
+  probeState.set(id, await getJSON('/probe/' + encodeURIComponent(id)));
+  await loadNodes();
+}
+
+async function probeAll() {
+  const data = await getJSON('/nodes');
+  for (const n of data.nodes || []) await probeNode(n.id);
+}
+
+async function refreshAll(manual = false) {
+  await Promise.allSettled([loadStatus(), loadNodes(), loadLogs(), loadDebug()]);
+  nextRefreshAt = Date.now() + REFRESH_SECONDS * 1000;
+  if (manual) document.getElementById('refreshBadge').textContent = 'Just refreshed';
+}
+
+function toggleAuto() {
+  auto = !auto;
+  document.getElementById('autoBtn').textContent = 'Auto: ' + (auto ? 'On' : 'Off');
+  nextRefreshAt = Date.now() + REFRESH_SECONDS * 1000;
+}
+
+setInterval(() => {
+  const remain = Math.max(0, Math.ceil((nextRefreshAt - Date.now()) / 1000));
+  document.getElementById('refreshBadge').textContent = auto ? `Refresh in ${remain}s` : 'Auto paused';
+  if (auto && remain <= 0) refreshAll();
+}, 250);
+
+document.getElementById('egressInfo').innerHTML = metric('Status', 'Not queried yet', '', 'Click Query button');
+refreshAll(true);
+</script>
+</body>
+</html>

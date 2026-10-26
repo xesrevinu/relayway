@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Avenir Next", "Gill Sans", "Trebuchet MS", sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", "Menlo", monospace;
+}
+
+@layer base {
+  html {
+    background: #071018;
+  }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer components {
+  .control-button {
+    @apply inline-flex items-center justify-center rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-2 text-xs font-bold text-slate-200 shadow-sm shadow-black/15 transition hover:border-cyan-300/50 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .control-button-primary {
+    @apply inline-flex items-center justify-center rounded-lg bg-cyan-300 px-4 py-2 text-xs font-black text-slate-950 shadow-lg shadow-cyan-950/25 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .control-button-active {
+    @apply inline-flex items-center justify-center rounded-lg border border-cyan-300/45 bg-cyan-300/15 px-3 py-2 text-xs font-black text-cyan-100 shadow-sm shadow-black/15 transition hover:bg-cyan-300/20;
+  }
+
+  .mini-button {
+    @apply inline-flex items-center justify-center rounded-full border border-white/10 bg-white/8 px-3 py-1.5 text-xs font-bold text-stone-100 transition hover:border-teal-200/40 hover:bg-teal-200/10 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .mini-button-primary {
+    @apply inline-flex items-center justify-center rounded-full bg-teal-200 px-3 py-1.5 text-xs font-black text-stone-950 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .detail-chip {
+    @apply inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm font-black text-stone-100 transition hover:border-teal-200/40 hover:bg-teal-200/10;
+  }
+
+  .hero-stat {
+    @apply rounded-xl border border-slate-700/70 bg-slate-900/70 p-4 shadow-xl shadow-black/15 backdrop-blur-lg;
+  }
+
+  .hero-stat span {
+    @apply block text-[10px] font-black uppercase tracking-[0.22em] text-slate-500;
+  }
+
+  .hero-stat strong {
+    @apply mt-2 block text-2xl font-black tracking-tight text-white;
+  }
+}
